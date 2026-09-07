@@ -105,7 +105,7 @@ export function MatchBadge({ result, groundTruth }: Props) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-[12px] font-semibold ${
         match
-          ? "border-brand-200 bg-brand-50 text-brand-800"
+          ? "border-brand-500 bg-brand-500 text-surface"
           : "border-warn-200 bg-warn-50 text-warn-600"
       }`}
     >

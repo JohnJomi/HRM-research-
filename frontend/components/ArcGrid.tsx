@@ -63,14 +63,14 @@ export default function ArcGrid({
         style={{ width: "max-content" }}
       >
         <div
-          className={`rounded-panel border border-line-strong bg-[#1a1f26] p-1.5 ${
+          className={`rounded-panel border border-line-strong bg-[#232d27] p-1.5 ${
             interactive
               ? "transition-[transform,box-shadow] duration-200 ease-out hover:scale-[1.015] hover:shadow-lift"
               : ""
           }`}
         >
           <div
-            className="grid gap-px bg-[#31383f]"
+            className="grid gap-px bg-[#3c5444]"
             style={{
               gridTemplateColumns: `repeat(${cols}, ${cell}px)`,
               gridTemplateRows: `repeat(${rows}, ${cell}px)`,

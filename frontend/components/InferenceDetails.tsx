@@ -17,12 +17,12 @@ interface MetricProps {
 function Metric({ Icon, label, value, hint, primary }: MetricProps) {
   return (
     <div
-      className={`rounded-panel border p-3.5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card ${
+      className={`rounded-panel border p-3.5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-card ${
         primary ? "border-line bg-surface" : "border-line bg-subtle"
       }`}
     >
       <div className="mb-1.5 flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${primary ? "text-brand-600" : "text-faint"}`} />
+        <Icon className={`h-4 w-4 ${primary ? "text-brand-500" : "text-brand-400"}`} />
         <span className="text-[12px] font-medium text-muted">{label}</span>
       </div>
       <div className={primary ? "metric-value" : "font-mono text-[14px] font-semibold text-heading"}>

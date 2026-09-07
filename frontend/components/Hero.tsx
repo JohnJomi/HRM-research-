@@ -8,16 +8,16 @@ const FEATURES = [
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden rounded-card border border-brand-100 bg-gradient-to-br from-brand-50 via-brand-50/40 to-surface px-8 py-9">
+    <section className="relative overflow-hidden rounded-card border border-line bg-gradient-to-br from-subtle via-brand-50/50 to-surface px-8 py-9">
       {/* A single soft glow instead of an illustration - depth without decoration. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-32 -top-40 h-[26rem] w-[26rem] rounded-full bg-brand-200/25 blur-3xl"
+        className="pointer-events-none absolute -right-32 -top-40 h-[26rem] w-[26rem] rounded-full bg-brand-300/25 blur-3xl"
       />
 
       <div className="relative flex flex-wrap items-center justify-between gap-x-16 gap-y-8">
         <div className="min-w-[320px] max-w-[560px] flex-1">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.11em] text-brand-600">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.11em] text-brand-500">
             Hierarchical Reasoning Model
           </p>
           <h1 className="mt-3.5 font-display text-[40px] font-bold leading-[1.14] tracking-[-0.01em] text-heading">
@@ -25,7 +25,7 @@ export default function Hero() {
             <br />
             Hierarchical Reasoning
           </h1>
-          <p className="mt-4 max-w-[440px] text-[14.5px] leading-relaxed text-muted">
+          <p className="mt-4 max-w-[440px] text-[14.5px] leading-relaxed text-brand-600">
             Upload an ARC task, run inference locally, and explore the reasoning process.
           </p>
         </div>

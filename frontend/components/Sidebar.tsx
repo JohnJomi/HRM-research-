@@ -29,7 +29,7 @@ interface Props {
  */
 export default function Sidebar({ onNewTask }: Props) {
   return (
-    <aside className="hidden w-[236px] shrink-0 flex-col border-r border-line bg-shell lg:flex">
+    <aside className="hidden w-[236px] shrink-0 flex-col border-r border-line bg-subtle lg:flex">
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-gradient-to-br from-brand-600 to-brand-900 text-[11px] font-bold tracking-tight text-white shadow-card">
           HRM
@@ -66,9 +66,9 @@ export default function Sidebar({ onNewTask }: Props) {
                   onClick={label === "New Task" ? onNewTask : undefined}
                   disabled={label !== "New Task"}
                   title={label === "New Task" ? "Clear the workspace" : "Not available in this build"}
-                  className="group flex w-full items-center gap-3 rounded-panel px-3 py-2.5 text-[14px] font-medium text-body transition-colors duration-200 hover:bg-subtle disabled:cursor-not-allowed disabled:text-faint disabled:hover:bg-transparent"
+                  className="group flex w-full items-center gap-3 rounded-panel px-3 py-2.5 text-[14px] font-medium text-body transition-colors duration-200 hover:bg-brand-50 disabled:cursor-not-allowed disabled:text-faint disabled:hover:bg-transparent"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center text-muted transition-transform duration-200 group-hover:scale-105 group-hover:text-brand-600 group-disabled:group-hover:scale-100 group-disabled:text-faint">
+                  <span className="flex h-7 w-7 items-center justify-center text-muted transition-transform duration-200 group-hover:scale-105 group-hover:text-brand-500 group-disabled:group-hover:scale-100 group-disabled:text-faint">
                     <Icon className="h-[17px] w-[17px]" />
                   </span>
                   {label}

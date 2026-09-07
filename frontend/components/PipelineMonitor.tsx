@@ -57,7 +57,7 @@ export default function PipelineMonitor({ events, running, failed, hasTask }: Pr
             dot = "border-brand-500 bg-brand-500 text-white animate-pulse-ring";
             title = "text-heading";
           } else if (reached) {
-            dot = "border-brand-300 bg-brand-100 text-brand-700";
+            dot = "border-brand-400 bg-brand-100 text-brand-600";
             title = "text-heading";
           }
 
@@ -67,7 +67,7 @@ export default function PipelineMonitor({ events, running, failed, hasTask }: Pr
                 <span
                   aria-hidden
                   className={`absolute left-[13px] top-7 h-[calc(100%-14px)] w-px ${
-                    reached ? "bg-brand-200" : "bg-line"
+                    reached ? "bg-brand-300" : "bg-line"
                   }`}
                 />
               )}
@@ -126,7 +126,7 @@ export default function PipelineMonitor({ events, running, failed, hasTask }: Pr
             </>
           ) : done ? (
             <>
-              <IconCheckCircle className="h-9 w-9 text-brand-600" />
+              <IconCheckCircle className="h-9 w-9 text-brand-500" />
               <p className="mt-3 text-[13.5px] font-semibold text-heading">Inference complete</p>
               <p className="mt-1 font-mono text-[12px] text-muted">{acts.length} ACT steps</p>
             </>

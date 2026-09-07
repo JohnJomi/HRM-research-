@@ -6,31 +6,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // surfaces - warm ivory page, warm white cards
-        canvas: "#f6f3ed",      // page behind the shell (warm ivory)
-        shell: "#fffefb",       // app shell
-        surface: "#fffdf8",     // cards - brighter than the page, never stark white
-        subtle: "#f7f4ed",      // inset panels / muted fills
-        line: "#e9e4d9",        // hairline borders (soft warm neutral)
-        "line-strong": "#dad3c5",
-        // text - warm-leaning neutrals for contrast on ivory
-        heading: "#17150f",
-        body: "#443f35",
-        muted: "#6f6a5d",
-        faint: "#807a69",
-        // accent scale (emerald family)
+        // surfaces - warm parchment page, light warm cards above it
+        canvas: "#d9cbb6",      // #D9CBB6 primary warm background
+        shell: "#fbf8f2",       // app shell, lighter than the page
+        surface: "#fdfaf4",     // cards - clearly lighter than the background
+        subtle: "#f2ece0",      // inset panels / muted fills
+        line: "#d5c7ac",        // hairline borders (#BFAE8F, lightened)
+        "line-strong": "#bfae8f", // #BFAE8F secondary warm neutral
+        // text - forest green instead of black
+        heading: "#2e3b33",     // #2E3B33 dark forest
+        body: "#3f4d43",
+        muted: "#5c6b5f",       // darkened sage: #7A8F73 fails contrast at UI sizes
+        faint: "#7d7566",
+        // accent scale built from the sage / deep-sage / forest triple
         brand: {
-          50: "#effaf3",
-          100: "#d9f2e2",
-          200: "#b4e5c9",
-          300: "#7ed3a5",
-          400: "#42b97c",
-          500: "#1f9d5f",
-          600: "#137d4b",
-          700: "#0f6039",
-          800: "#0d4d2f",
-          900: "#0a3b25",
-          950: "#052e19",
+          50: "#eff3ed",
+          100: "#dde5da",
+          200: "#c3d0bf",
+          300: "#a3b79e",
+          400: "#7a8f73",       // #7A8F73 sage - secondary accent, icons, hovers
+          500: "#4f6b57",       // #4F6B57 deep sage - PRIMARY accent
+          600: "#45604d",
+          700: "#3c5444",
+          800: "#35483b",
+          900: "#2e3b33",       // #2E3B33 dark forest
+          950: "#232d27",
         },
         danger: { 50: "#fef2f2", 200: "#fecaca", 500: "#dc2626", 700: "#b91c1c" },
         warn: { 50: "#fffbeb", 200: "#fde68a", 600: "#d97706" },
@@ -41,11 +41,11 @@ const config: Config = {
         pill: "999px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(38,32,20,0.04), 0 8px 24px -12px rgba(38,32,20,0.10)",
-        "card-hover": "0 2px 4px rgba(38,32,20,0.05), 0 16px 32px -14px rgba(38,32,20,0.16)",
-        lift: "0 12px 28px -12px rgba(38,32,20,0.20)",
-        ring: "0 0 0 4px rgba(31,157,95,0.12)",
-        modal: "0 24px 64px -16px rgba(38,32,20,0.32)",
+        card: "0 1px 2px rgba(46,59,51,0.04), 0 8px 24px -12px rgba(46,59,51,0.10)",
+        "card-hover": "0 2px 4px rgba(46,59,51,0.05), 0 16px 32px -14px rgba(46,59,51,0.16)",
+        lift: "0 12px 28px -12px rgba(46,59,51,0.20)",
+        ring: "0 0 0 4px rgba(79,107,87,0.16)",
+        modal: "0 24px 64px -16px rgba(46,59,51,0.32)",
       },
       transitionDuration: { fast: "150ms", DEFAULT: "200ms", slow: "250ms" },
       fontFamily: {
@@ -60,9 +60,9 @@ const config: Config = {
         },
         "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
         "pulse-ring": {
-          "0%": { boxShadow: "0 0 0 0 rgba(31,157,95,0.35)" },
-          "70%": { boxShadow: "0 0 0 8px rgba(31,157,95,0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(31,157,95,0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(79,107,87,0.38)" },
+          "70%": { boxShadow: "0 0 0 8px rgba(79,107,87,0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(79,107,87,0)" },
         },
         shimmer: { "100%": { transform: "translateX(100%)" } },
       },
