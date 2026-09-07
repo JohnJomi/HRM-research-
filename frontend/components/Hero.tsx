@@ -33,7 +33,7 @@ export default function Hero() {
         <ul className="space-y-3.5 pr-2">
           {FEATURES.map(({ Icon, title, sub }) => (
             <li key={title} className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-gradient-to-br from-brand-700 to-brand-900 text-white shadow-card">
+              <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-brand-900 text-surface shadow-card">
                 <Icon className="h-[19px] w-[19px]" />
               </span>
               <span className="leading-tight">

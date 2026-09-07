@@ -60,12 +60,12 @@ export default function UploadPanel({ onTask, onError, fileName, disabled }: Pro
         className={`group rounded-card border-2 border-dashed px-6 py-8 text-center transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out ${
           dragging
             ? "border-brand-500 bg-brand-50 shadow-ring"
-            : "border-line-strong bg-subtle hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50/50 hover:shadow-card"
+            : "border-line-strong bg-subtle hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 hover:shadow-card"
         } ${disabled ? "pointer-events-none opacity-60" : ""}`}
       >
         <span
           className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full transition-transform duration-200 ease-out group-hover:scale-105 ${
-            dragging ? "bg-brand-500 text-white" : "bg-surface text-muted shadow-card"
+            dragging ? "bg-brand-500 text-surface" : "bg-surface text-brand-500 shadow-card"
           }`}
         >
           <IconUpload className="h-6 w-6" />
