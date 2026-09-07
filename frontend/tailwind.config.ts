@@ -50,6 +50,7 @@ const config: Config = {
       transitionDuration: { fast: "150ms", DEFAULT: "200ms", slow: "250ms" },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "Georgia", "serif"],
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       keyframes: {

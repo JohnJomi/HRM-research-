@@ -35,8 +35,10 @@ export default function Sidebar({ onNewTask }: Props) {
           HRM
         </div>
         <div className="leading-tight">
-          <div className="text-[15px] font-semibold tracking-tight text-heading">HRM Lab</div>
-          <div className="text-[12px] text-muted">Local Reasoning</div>
+          <div className="font-display text-[17px] font-bold leading-none tracking-tight text-heading">
+            HRM Lab
+          </div>
+          <div className="mt-1 text-[12px] text-muted">Local Reasoning</div>
         </div>
       </div>
 

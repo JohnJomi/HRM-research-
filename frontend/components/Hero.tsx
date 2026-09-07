@@ -20,7 +20,7 @@ export default function Hero() {
           <p className="text-[12px] font-semibold uppercase tracking-[0.11em] text-brand-600">
             Hierarchical Reasoning Model
           </p>
-          <h1 className="mt-3.5 text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] text-heading">
+          <h1 className="mt-3.5 font-display text-[40px] font-bold leading-[1.14] tracking-[-0.01em] text-heading">
             Solve ARC Puzzles with
             <br />
             Hierarchical Reasoning

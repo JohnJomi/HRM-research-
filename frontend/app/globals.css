@@ -47,9 +47,12 @@
            bg-subtle px-2.5 py-1 text-[12px] font-medium text-muted;
   }
 
-  /* Section number + title used across every workspace card. */
+  /* Section number + title used across every workspace card.
+     Display face here is the single toggle for how editorial the workspace
+     reads - swap `font-display font-bold` for `font-semibold` to put every
+     card heading back on Mulish. */
   .card-title {
-    @apply text-[15px] font-semibold tracking-tight text-heading;
+    @apply font-display text-[16px] font-bold tracking-tight text-heading;
   }
 
   .icon-tile {
