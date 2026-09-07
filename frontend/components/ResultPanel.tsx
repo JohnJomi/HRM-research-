@@ -1,23 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import ArcGrid from "./ArcGrid";
+import GridModal from "./GridModal";
+import { IconArrowRight, IconCheckCircle, IconEye } from "./icons";
 import type { Grid, PuzzleResponse } from "@/lib/types";
 
 interface Props {
   result: PuzzleResponse;
   groundTruth?: Grid | null;
-}
-
-function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded border border-ink-700 bg-ink-850 px-3 py-2">
-      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500">
-        {label}
-      </div>
-      <div className="mt-0.5 font-mono text-sm text-slate-200">{value}</div>
-      {hint && <div className="mt-0.5 font-mono text-[10px] text-slate-600">{hint}</div>}
-    </div>
-  );
 }
 
 function gridsEqual(a: Grid, b: Grid): boolean {
@@ -27,73 +18,99 @@ function gridsEqual(a: Grid, b: Grid): boolean {
   );
 }
 
+/**
+ * Prediction-first. Ground truth is deliberately secondary and hidden behind a
+ * disclosure, so the prediction is read before the answer.
+ */
 export default function ResultPanel({ result, groundTruth }: Props) {
-  const m = result.metadata;
-  const [rows, cols] = result.prediction_dimensions;
+  const [showTruth, setShowTruth] = useState(false);
+  const [zoom, setZoom] = useState<{ grid: Grid; title: string } | null>(null);
+
+  // Only computed when the task actually carries an answer - never invented.
   const match = groundTruth ? gridsEqual(result.prediction_grid, groundTruth) : null;
-  const decodeMethod = (m.decode_info?.method as string) ?? "—";
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start gap-8">
-        <ArcGrid grid={result.input_grid} maxSize={300} label="Input" />
-        <div className="flex h-[300px] items-center">
-          <span className="font-mono text-2xl text-slate-700">→</span>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-center gap-6 sm:justify-start">
+        <ArcGrid
+          grid={result.input_grid}
+          maxSize={250}
+          label="Input"
+          interactive
+          onExpand={() => setZoom({ grid: result.input_grid, title: "Input grid" })}
+        />
+
+        <div className="flex h-[250px] items-center px-1">
+          <IconArrowRight className="h-6 w-6 text-line-strong" />
         </div>
-        <ArcGrid grid={result.prediction_grid} maxSize={300} label="HRM Prediction" />
-        {groundTruth && (
-          <ArcGrid grid={groundTruth} maxSize={300} label="Ground truth" />
-        )}
+
+        <div className="rounded-card border border-brand-200 bg-brand-50/40 p-3">
+          <ArcGrid
+            grid={result.prediction_grid}
+            maxSize={250}
+            label="HRM Prediction"
+            interactive
+            onExpand={() =>
+              setZoom({ grid: result.prediction_grid, title: "HRM prediction" })
+            }
+          />
+        </div>
       </div>
 
-      {match !== null && (
-        <div
-          className={`inline-flex items-center gap-2 rounded border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] ${
-            match
-              ? "border-emerald-700/60 bg-emerald-500/10 text-emerald-300"
-              : "border-amber-700/60 bg-amber-500/10 text-amber-300"
-          }`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${match ? "bg-emerald-400" : "bg-amber-400"}`} />
-          {match ? "Exact match with this task's answer" : "Differs from this task's answer"}
+      {groundTruth && (
+        <div className="border-t border-line pt-4">
+          <button
+            type="button"
+            onClick={() => setShowTruth((v) => !v)}
+            aria-expanded={showTruth}
+            className="btn-quiet"
+          >
+            <IconEye className="h-4 w-4" />
+            {showTruth ? "Hide ground truth" : "View ground truth"}
+          </button>
+
+          {showTruth && (
+            <div className="mt-4 flex flex-wrap items-start gap-5 animate-fade-up">
+              <ArcGrid
+                grid={groundTruth}
+                maxSize={190}
+                label="Ground truth"
+                interactive
+                onExpand={() => setZoom({ grid: groundTruth, title: "Ground truth" })}
+              />
+              {match !== null && (
+                <p className="max-w-xs pt-6 text-[12.5px] leading-relaxed text-muted">
+                  {match
+                    ? "The prediction matches this task's answer cell for cell."
+                    : "The prediction differs from this task's answer."}{" "}
+                  This is a single task and says nothing about general ARC accuracy.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-        <Metric label="Dimensions" value={`${rows} × ${cols}`} hint={decodeMethod} />
-        <Metric
-          label="Inference time"
-          value={`${(m.elapsed_ms / 1000).toFixed(2)} s`}
-          hint={`${Math.round(m.elapsed_ms)} ms`}
-        />
-        <Metric
-          label="ACT steps"
-          value={`${m.steps} / ${m.max_steps}`}
-          hint="fixed in eval mode"
-        />
-        <Metric label="Device" value={m.device.toUpperCase()} hint="local inference" />
-        <Metric label="Dtype" value={m.dtype.replace("torch.", "")} />
-        <Metric label="Logits" value={m.logits_shape.join(" × ")} hint="batch × seq × vocab" />
-        <Metric
-          label="Puzzle embedding"
-          value={`id ${m.puzzle_identifier}`}
-          hint={m.puzzle_identifier === 0 ? "blank" : "trained"}
-        />
-        <Metric
-          label="Final q_halt"
-          value={m.q_halt_logits.length ? m.q_halt_logits[m.q_halt_logits.length - 1].toFixed(3) : "—"}
-          hint={
-            m.q_continue_logits.length
-              ? `q_continue ${m.q_continue_logits[m.q_continue_logits.length - 1].toFixed(3)}`
-              : undefined
-          }
-        />
-      </div>
-
-      <div className="font-mono text-[10px] text-slate-600">
-        job {result.job_id}
-        {result.raw_tokens ? ` · ${result.raw_tokens.length} predicted tokens` : ""}
-      </div>
+      {zoom && <GridModal grid={zoom.grid} title={zoom.title} onClose={() => setZoom(null)} />}
     </div>
+  );
+}
+
+/** Rendered in the Result card header - only when a ground truth existed. */
+export function MatchBadge({ result, groundTruth }: Props) {
+  if (!groundTruth) return null;
+  const match = gridsEqual(result.prediction_grid, groundTruth);
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-[12px] font-semibold ${
+        match
+          ? "border-brand-200 bg-brand-50 text-brand-800"
+          : "border-warn-200 bg-warn-50 text-warn-600"
+      }`}
+    >
+      <IconCheckCircle className="h-4 w-4" />
+      {match ? "Exact Match" : "No Match"}
+    </span>
   );
 }

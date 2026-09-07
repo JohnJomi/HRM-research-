@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { parseArcTask } from "@/lib/validate";
+import { IconChevronDown, IconFile, IconUpload } from "./icons";
 import type { ARCTask } from "@/lib/types";
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   disabled?: boolean;
 }
 
+/** Upload logic is unchanged: drag/drop, browse, paste, same client-side
+ *  pre-check. The backend remains authoritative for validation. */
 export default function UploadPanel({ onTask, onError, fileName, disabled }: Props) {
   const [dragging, setDragging] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
@@ -54,29 +57,43 @@ export default function UploadPanel({ onTask, onError, fileName, disabled }: Pro
           const file = e.dataTransfer.files?.[0];
           if (file) readFile(file);
         }}
-        onClick={() => !disabled && inputRef.current?.click()}
-        className={`cursor-pointer rounded-lg border border-dashed px-5 py-7 text-center transition-colors ${
+        className={`group rounded-card border-2 border-dashed px-6 py-8 text-center transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out ${
           dragging
-            ? "border-accent bg-accent/5"
-            : "border-ink-600 bg-ink-850 hover:border-ink-500"
-        } ${disabled ? "pointer-events-none opacity-50" : ""}`}
+            ? "border-brand-500 bg-brand-50 shadow-ring"
+            : "border-line-strong bg-subtle hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50/50 hover:shadow-card"
+        } ${disabled ? "pointer-events-none opacity-60" : ""}`}
       >
-        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">
-          Drop ARC task
-        </div>
-        <div className="mt-1.5 text-xs text-slate-500">
-          drag a <span className="font-mono text-slate-400">.json</span> file here, or click to browse
-        </div>
-        {fileName && (
-          <div className="mt-3 inline-block rounded border border-ink-600 bg-ink-800 px-2 py-1 font-mono text-[11px] text-emerald-300">
-            {fileName}
-          </div>
-        )}
+        <span
+          className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full transition-transform duration-200 ease-out group-hover:scale-105 ${
+            dragging ? "bg-brand-500 text-white" : "bg-surface text-muted shadow-card"
+          }`}
+        >
+          <IconUpload className="h-6 w-6" />
+        </span>
+
+        <p className="text-[15px] font-semibold text-heading">
+          {dragging ? "Release to load task" : "Drop your ARC task JSON here"}
+        </p>
+        <p className="mt-1 text-[13px] text-muted">or click to browse</p>
+
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled}
+          className="btn-primary mt-4"
+        >
+          <IconFile className="h-4 w-4" />
+          Choose File
+        </button>
+
+        <p className="mt-3 text-[12px] text-faint">Supports ARC-AGI JSON format</p>
+
         <input
           ref={inputRef}
           type="file"
           accept="application/json,.json"
-          className="hidden"
+          className="sr-only"
+          aria-label="Choose an ARC task JSON file"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) readFile(file);
@@ -85,34 +102,48 @@ export default function UploadPanel({ onTask, onError, fileName, disabled }: Pro
         />
       </div>
 
-      <button
-        type="button"
-        onClick={() => setPasteOpen((v) => !v)}
-        disabled={disabled}
-        className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500 hover:text-slate-300 disabled:opacity-40"
-      >
-        {pasteOpen ? "− hide paste" : "+ paste JSON instead"}
-      </button>
-
-      {pasteOpen && (
-        <div className="space-y-2">
-          <textarea
-            value={pasted}
-            onChange={(e) => setPasted(e.target.value)}
-            placeholder='{"train": [...], "test": [...]}'
-            spellCheck={false}
-            className="h-28 w-full resize-y rounded border border-ink-700 bg-ink-950 p-2 font-mono text-[11px] text-slate-300 outline-none focus:border-accent-dim"
-          />
-          <button
-            type="button"
-            disabled={disabled || pasted.trim().length === 0}
-            onClick={() => accept(pasted, "pasted-task.json")}
-            className="rounded border border-ink-600 bg-ink-800 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-slate-300 hover:border-ink-500 disabled:opacity-40"
-          >
-            Load pasted task
-          </button>
+      {fileName && (
+        <div className="flex items-center gap-2.5 rounded-panel border border-brand-200 bg-brand-50 px-3 py-2.5 animate-fade-in">
+          <IconFile className="h-4 w-4 shrink-0 text-brand-600" />
+          <span className="truncate font-mono text-[12.5px] text-brand-800">{fileName}</span>
         </div>
       )}
+
+      <div className="rounded-panel border border-line">
+        <button
+          type="button"
+          onClick={() => setPasteOpen((v) => !v)}
+          disabled={disabled}
+          aria-expanded={pasteOpen}
+          className="flex w-full items-center justify-between px-3.5 py-2.5 text-[13px] font-medium text-body transition-colors duration-200 hover:bg-subtle disabled:opacity-50"
+        >
+          Or paste JSON instead
+          <IconChevronDown
+            className={`h-4 w-4 text-muted transition-transform duration-200 ${pasteOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {pasteOpen && (
+          <div className="space-y-2 border-t border-line p-3 animate-fade-in">
+            <textarea
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              placeholder='{"train": [...], "test": [...]}'
+              spellCheck={false}
+              aria-label="Paste ARC task JSON"
+              className="h-24 w-full resize-y rounded-panel border border-line bg-subtle p-2.5 font-mono text-[12px] text-body outline-none transition-colors duration-200 focus:border-brand-400"
+            />
+            <button
+              type="button"
+              disabled={disabled || pasted.trim().length === 0}
+              onClick={() => accept(pasted, "pasted-task.json")}
+              className="btn-quiet disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Load pasted task
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -2,19 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-canvas text-body antialiased;
+  }
+
+  /* Visible, consistent focus for keyboard users. */
+  :focus-visible {
+    outline: 2px solid theme("colors.brand.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
-body {
-  background-color: #08090c;
-  background-image:
-    radial-gradient(60rem 40rem at 15% -10%, rgba(91, 157, 255, 0.06), transparent),
-    radial-gradient(50rem 30rem at 100% 0%, rgba(91, 157, 255, 0.04), transparent);
-  background-attachment: fixed;
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  /* Lift on hover via transform + shadow only - never layout-affecting. */
+  .card-interactive {
+    @apply card transition-[transform,box-shadow] duration-200 ease-out
+           hover:-translate-y-0.5 hover:shadow-card-hover;
+  }
+
+  .card-pad {
+    @apply p-5;
+  }
+
+  .label {
+    @apply text-[13px] font-medium text-muted;
+  }
+
+  .metric-value {
+    @apply font-mono text-[17px] font-semibold tracking-tight text-heading;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill border border-line
+           bg-subtle px-2.5 py-1 text-[12px] font-medium text-muted;
+  }
+
+  /* Section number + title used across every workspace card. */
+  .card-title {
+    @apply text-[15px] font-semibold tracking-tight text-heading;
+  }
+
+  .icon-tile {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]
+           bg-brand-50 text-brand-600;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-panel
+           bg-gradient-to-b from-brand-700 to-brand-800 px-4 py-2.5
+           text-[14px] font-semibold text-white shadow-card
+           transition-[transform,box-shadow,filter] duration-200 ease-out
+           hover:-translate-y-px hover:brightness-110 hover:shadow-lift
+           active:translate-y-0 active:scale-[0.99]
+           disabled:cursor-not-allowed disabled:from-line-strong disabled:to-line-strong
+           disabled:text-faint disabled:shadow-none disabled:hover:translate-y-0
+           disabled:hover:brightness-100;
+  }
+
+  .btn-quiet {
+    @apply inline-flex items-center gap-2 rounded-panel border border-line bg-surface
+           px-3 py-2 text-[13px] font-medium text-body transition-colors duration-200
+           hover:border-line-strong hover:bg-subtle;
+  }
+}
+
+/* Respect the user's motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0d0f14; }
-::-webkit-scrollbar-thumb { background: #222735; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #2e3446; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d7ddd9; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #c2cac5; }
