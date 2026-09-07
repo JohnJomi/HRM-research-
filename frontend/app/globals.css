@@ -89,5 +89,5 @@
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d7ddd9; border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: #c2cac5; }
+::-webkit-scrollbar-thumb { background: #ded7c9; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #cbc3b2; }

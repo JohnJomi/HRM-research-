@@ -6,18 +6,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // surfaces
-        canvas: "#eef1ef",      // page behind the shell
-        shell: "#ffffff",       // app shell
-        surface: "#ffffff",     // cards
-        subtle: "#f6f8f7",      // inset panels / muted fills
-        line: "#e8ebe9",        // hairline borders
-        "line-strong": "#dbe0dd",
-        // text
-        heading: "#101512",
-        body: "#3d4642",
-        muted: "#79837e",
-        faint: "#9aa39e",
+        // surfaces - warm ivory page, warm white cards
+        canvas: "#f6f3ed",      // page behind the shell (warm ivory)
+        shell: "#fffefb",       // app shell
+        surface: "#fffdf8",     // cards - brighter than the page, never stark white
+        subtle: "#f7f4ed",      // inset panels / muted fills
+        line: "#e9e4d9",        // hairline borders (soft warm neutral)
+        "line-strong": "#dad3c5",
+        // text - warm-leaning neutrals for contrast on ivory
+        heading: "#17150f",
+        body: "#443f35",
+        muted: "#6f6a5d",
+        faint: "#807a69",
         // accent scale (emerald family)
         brand: {
           50: "#effaf3",
@@ -41,11 +41,11 @@ const config: Config = {
         pill: "999px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(16,21,18,0.04), 0 8px 24px -12px rgba(16,21,18,0.10)",
-        "card-hover": "0 2px 4px rgba(16,21,18,0.05), 0 16px 32px -14px rgba(16,21,18,0.16)",
-        lift: "0 12px 28px -12px rgba(16,21,18,0.22)",
+        card: "0 1px 2px rgba(38,32,20,0.04), 0 8px 24px -12px rgba(38,32,20,0.10)",
+        "card-hover": "0 2px 4px rgba(38,32,20,0.05), 0 16px 32px -14px rgba(38,32,20,0.16)",
+        lift: "0 12px 28px -12px rgba(38,32,20,0.20)",
         ring: "0 0 0 4px rgba(31,157,95,0.12)",
-        modal: "0 24px 64px -16px rgba(16,21,18,0.35)",
+        modal: "0 24px 64px -16px rgba(38,32,20,0.32)",
       },
       transitionDuration: { fast: "150ms", DEFAULT: "200ms", slow: "250ms" },
       fontFamily: {
@@ -63,17 +63,12 @@ const config: Config = {
           "70%": { boxShadow: "0 0 0 8px rgba(31,157,95,0)" },
           "100%": { boxShadow: "0 0 0 0 rgba(31,157,95,0)" },
         },
-        float: {
-          "0%,100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-5px)" },
-        },
         shimmer: { "100%": { transform: "translateX(100%)" } },
       },
       animation: {
         "fade-up": "fade-up 300ms ease-out both",
         "fade-in": "fade-in 250ms ease-out both",
         "pulse-ring": "pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
-        float: "float 7s ease-in-out infinite",
       },
     },
   },
