@@ -2,7 +2,9 @@ from typing import List
 import yaml
 import os
 from typing import Optional
+import math
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import tqdm
@@ -101,11 +103,6 @@ def load_checkpoint(checkpoint_path: str, device: str = "cpu"):
             storage_class = pid[1]      # e.g., torch.BFloat16Storage
             storage_id_str = pid[2]     # e.g., '0' (string ID)
             
-            if storage_id_str not in storage_files:
-                return None
-            
-            raw_data = storage_files[storage_id_str]
-            
             # Reconstruct the Storage from raw binary data
             try:
                 # Map storage class to dtype
@@ -121,7 +118,32 @@ def load_checkpoint(checkpoint_path: str, device: str = "cpu"):
                     'BoolStorage': torch.bool,
                 }
                 dtype = dtype_map.get(class_name, torch.float32)
-                
+
+                if storage_id_str not in storage_files:
+                    # External tensor file absent from the checkpoint directory.
+                    # Build a zero-size 'meta' placeholder so unpickling can finish;
+                    # it allocates no memory and is dropped later by
+                    # filter_state_dict_by_shape / load_state_dict(strict=False).
+                    numel = pid[4] if len(pid) > 4 else 0
+                    print(f"[Checkpoint][WARNING] Missing external tensor file "
+                          f"'{storage_id_str}' ({class_name}, numel={numel}). "
+                          f"The parameter backed by it will NOT be loaded.")
+                    tensor = torch.empty(numel, dtype=dtype, device="meta")
+                    untyped_storage = tensor.untyped_storage()
+
+                    class MetaStorageWithDtype:
+                        def __init__(self, untyped_storage, dtype):
+                            self._untyped_storage = untyped_storage
+                            self.dtype = dtype
+                            self.device = untyped_storage.device
+
+                        def __getattr__(self, name):
+                            return getattr(self._untyped_storage, name)
+
+                    return MetaStorageWithDtype(untyped_storage, dtype)
+
+                raw_data = storage_files[storage_id_str]
+
                 # Create a tensor from raw bytes
                 tensor = torch.frombuffer(raw_data, dtype=dtype).clone()
                 
@@ -158,6 +180,9 @@ def load_checkpoint(checkpoint_path: str, device: str = "cpu"):
                 # Recursively move all tensors to the target device
                 def move_to_device(obj):
                     if isinstance(obj, torch.Tensor):
+                        # 'meta' placeholders for missing files cannot be copied
+                        if obj.device.type == "meta":
+                            return obj
                         return obj.to(device)
                     elif isinstance(obj, dict):
                         return {k: move_to_device(v) for k, v in obj.items()}
@@ -206,6 +231,192 @@ def load_compatible_state_dict(model: torch.nn.Module, checkpoint_path: str, dev
     return checkpoint_state
 
 
+def _print_sample_from_loader(loader, title: str):
+    """Print the first sample from a loader for debugging."""
+    for _set_name, batch, _global_batch_size in loader:
+        inp = batch["inputs"][0].cpu().numpy()
+        lbl = batch["labels"][0].cpu().numpy()
+        
+        # Reshape 1D to 2D if it's a perfect square
+        if inp.ndim == 1:
+            side = int(math.sqrt(inp.shape[0]))
+            if side * side == inp.shape[0]:
+                inp = inp.reshape(side, side)
+        
+        if lbl.ndim == 1:
+            side = int(math.sqrt(lbl.shape[0]))
+            if side * side == lbl.shape[0]:
+                lbl = lbl.reshape(side, side)
+        
+        print(f"\n===== {title} =====")
+        print(f"Input shape: {inp.shape}")
+        if inp.ndim == 2:
+            print(inp[:5, :5])
+        else:
+            print(inp[:10])
+        print(f"Label shape: {lbl.shape}")
+        if lbl.ndim == 2:
+            print(lbl[:5, :5])
+        else:
+            print(lbl[:10])
+        break
+
+
+def _print_prediction_sample(model: torch.nn.Module, loader, device: torch.device):
+    """Print model prediction for the first sample from a loader."""
+    with torch.no_grad():
+        for _set_name, batch, _global_batch_size in loader:
+            batch = {k: v.to(device) for k, v in batch.items()}
+            carry = model.initial_carry(batch)  # type: ignore
+
+            # Run model forward pass until completion
+            while True:
+                carry, _, _, preds, all_finish = model(carry=carry, batch=batch, return_keys=["logits"])
+                if all_finish:
+                    break
+
+            # Extract prediction and ground truth
+            pred_tokens = torch.argmax(preds["logits"][0], dim=-1).cpu().numpy()
+            gt_tokens = batch["labels"][0].cpu().numpy()
+            inp = batch["inputs"][0].cpu().numpy()
+
+            # Reshape 1D to 2D if perfect square
+            def reshape_if_1d(arr):
+                if arr.ndim == 1:
+                    side = int(math.sqrt(arr.shape[0]))
+                    if side * side == arr.shape[0]:
+                        arr = arr.reshape(side, side)
+                return arr
+
+            inp = reshape_if_1d(inp)
+            pred_tokens = reshape_if_1d(pred_tokens)
+            gt_tokens = reshape_if_1d(gt_tokens)
+
+            # Print prediction sample
+            print(f"\n===== PREDICTION SAMPLE =====")
+            print(f"Input shape: {inp.shape}")
+            if inp.ndim == 2:
+                print(inp[:5, :5])
+            else:
+                print(inp[:10])
+
+            print(f"Prediction shape: {pred_tokens.shape}")
+            if pred_tokens.ndim == 2:
+                print(pred_tokens[:5, :5])
+            else:
+                print(pred_tokens[:10])
+
+            print(f"Ground Truth shape: {gt_tokens.shape}")
+            if gt_tokens.ndim == 2:
+                print(gt_tokens[:5, :5])
+            else:
+                print(gt_tokens[:10])
+
+            break
+
+
+def _print_raw_dataset_sample(data_path: str, split: str, num_samples: int = 1):
+    """Print actual ARC puzzle samples from raw data before preprocessing.
+    
+    Loads puzzle IDs from identifiers.json and displays the first num_samples
+    puzzles from their raw ARC JSON files, showing the train/test structure.
+    
+    Args:
+        data_path: Path to processed dataset directory (e.g., 'data/arc-small')
+        split: 'train' or 'test' (specifies which split to sample from)
+        num_samples: Number of actual puzzle samples to display
+    """
+    import json
+    import glob as glob_module
+    
+    header = f"RAW {split.upper()} SAMPLE"
+    print(f"\n===== {header} =====")
+    
+    try:
+        # Load puzzle identifiers
+        identifiers_path = os.path.join(data_path, "identifiers.json")
+        if not os.path.exists(identifiers_path):
+            print(f"[Warning] Identifiers file not found: {identifiers_path}")
+            return
+        
+        with open(identifiers_path, 'r') as f:
+            identifiers = json.load(f)
+        
+        # Find raw ARC data directories
+        raw_data_dirs = []
+        for base_dir in ["dataset/raw-data/ARC-AGI/data", 
+                         "dataset/raw-data/ARC-AGI-2/data",
+                         "dataset/raw-data/ConceptARC/corpus"]:
+            if os.path.exists(base_dir):
+                raw_data_dirs.append(base_dir)
+        
+        if not raw_data_dirs:
+            print("[Warning] No raw ARC data found in dataset/raw-data/")
+            return
+        
+        # Collect puzzle files from the appropriate split
+        puzzle_files = []
+        for raw_dir in raw_data_dirs:
+            # Check for split subdirectories
+            split_dir = os.path.join(raw_dir, split)
+            if os.path.exists(split_dir):
+                puzzle_files.extend(glob_module.glob(os.path.join(split_dir, "*.json")))
+            
+            # Also check for alternative split names (e.g., 'training' vs 'train')
+            if split == "train":
+                alt_dir = os.path.join(raw_dir, "training")
+                if os.path.exists(alt_dir):
+                    puzzle_files.extend(glob_module.glob(os.path.join(alt_dir, "*.json")))
+            elif split == "test":
+                alt_dir = os.path.join(raw_dir, "evaluation")
+                if os.path.exists(alt_dir):
+                    puzzle_files.extend(glob_module.glob(os.path.join(alt_dir, "*.json")))
+        
+        if not puzzle_files:
+            print(f"[Warning] No puzzle files found for split '{split}' in raw ARC data")
+            return
+        
+        # Print first num_samples puzzles
+        printed = 0
+        for puzzle_file in puzzle_files[:num_samples]:
+            try:
+                with open(puzzle_file, 'r') as f:
+                    puzzle_data = json.load(f)
+                
+                puzzle_id = os.path.basename(puzzle_file).replace('.json', '')
+                print(f"\n[Puzzle {printed}: {puzzle_id}]")
+                print(f"Train examples: {len(puzzle_data.get('train', []))}, "
+                      f"Test examples: {len(puzzle_data.get('test', []))}")
+                
+                # Print first train example structure
+                if puzzle_data.get('train'):
+                    first_train = puzzle_data['train'][0]
+                    print(f"Train[0] input shape: {np.array(first_train['input']).shape}, "
+                          f"output shape: {np.array(first_train['output']).shape}")
+                
+                # Print the full first example for one puzzle
+                if printed == 0:
+                    print(f"\nFull structure of first puzzle:")
+                    display_data = {
+                        'train': puzzle_data.get('train', [])[:1],
+                        'test': puzzle_data.get('test', [])[:1]
+                    }
+                    print(json.dumps(display_data, indent=2)[:1500])
+                
+                printed += 1
+            
+            except Exception as e:
+                print(f"[Warning] Failed to load puzzle {puzzle_file}: {e}")
+                continue
+    
+    except FileNotFoundError:
+        print(f"[Warning] Identifiers file not found: {identifiers_path}")
+    except json.JSONDecodeError as e:
+        print(f"[Warning] Failed to parse identifiers JSON: {e}")
+    except Exception as e:
+        print(f"[Warning] Error reading raw dataset samples: {e}")
+
+
 def launch():
     eval_cfg = EvalConfig(**OmegaConf.to_container(OmegaConf.from_cli()))  # type: ignore
     
@@ -229,6 +440,10 @@ def launch():
     if eval_cfg.max_samples is not None:
         config.global_batch_size = min(config.global_batch_size, max(1, eval_cfg.max_samples))
 
+    # Print raw dataset samples before preprocessing
+    _print_raw_dataset_sample(config.data_path, "train", 1)
+    _print_raw_dataset_sample(config.data_path, "test", 1)
+
     train_examples, _ = get_dataset_split_info(config.data_path, "train")
     eval_examples, _ = get_dataset_split_info(config.data_path, "test")
     print(f"[Dataset] train examples: {train_examples}")
@@ -239,6 +454,10 @@ def launch():
     # Dataloader
     train_loader, train_metadata = create_dataloader(config, "train", test_set_mode=False, epochs_per_iter=1, global_batch_size=config.global_batch_size, rank=RANK, world_size=WORLD_SIZE)
     eval_loader,  eval_metadata  = create_dataloader(config, "test", test_set_mode=True, epochs_per_iter=1, global_batch_size=config.global_batch_size, rank=RANK, world_size=WORLD_SIZE)
+
+    # Print one sample from each loader for inspection
+    _print_sample_from_loader(train_loader, "TRAIN SAMPLE")
+    _print_sample_from_loader(eval_loader, "TEST SAMPLE")
 
     # Models
     device = get_compute_device()
@@ -255,6 +474,8 @@ def launch():
     ckpt_filename = os.path.basename(eval_cfg.checkpoint)
     if ckpt_filename.startswith("step_"):
         train_state.step = int(ckpt_filename.removeprefix("step_"))
+
+    _print_prediction_sample(train_state.model, eval_loader, device)
 
     # Evaluate
     print ("Starting evaluation")

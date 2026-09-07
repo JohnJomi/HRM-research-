@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-canvas text-body antialiased;
+  }
+
+  /* Visible, consistent focus for keyboard users. */
+  :focus-visible {
+    outline: 2px solid theme("colors.brand.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  /* Lift on hover via transform + shadow only - never layout-affecting. */
+  .card-interactive {
+    @apply card transition-[transform,box-shadow,border-color] duration-200 ease-out
+           hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card-hover;
+  }
+
+  .card-pad {
+    @apply p-5;
+  }
+
+  .label {
+    @apply text-[13px] font-medium text-muted;
+  }
+
+  .metric-value {
+    @apply font-mono text-[17px] font-semibold tracking-tight text-heading;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill border border-line
+           bg-subtle px-2.5 py-1 text-[12px] font-medium text-muted;
+  }
+
+  /* Section number + title used across every workspace card.
+     Display face here is the single toggle for how editorial the workspace
+     reads - swap `font-display font-bold` for `font-semibold` to put every
+     card heading back on Mulish. */
+  .card-title {
+    @apply font-display text-[16px] font-bold tracking-tight text-heading;
+  }
+
+  .icon-tile {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]
+           bg-brand-50 text-brand-500;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-panel
+           bg-brand-500 px-4 py-2.5
+           text-[14px] font-semibold text-surface shadow-card
+           transition-[transform,box-shadow,background-color] duration-200 ease-out
+           hover:-translate-y-px hover:bg-brand-900 hover:shadow-lift
+           active:translate-y-0 active:scale-[0.99]
+           disabled:cursor-not-allowed disabled:bg-line-strong
+           disabled:text-surface/70 disabled:shadow-none disabled:hover:translate-y-0
+           disabled:hover:bg-line-strong;
+  }
+
+  .btn-quiet {
+    @apply inline-flex items-center gap-2 rounded-panel border border-line bg-surface
+           px-3 py-2 text-[13px] font-medium text-body transition-colors duration-200
+           hover:border-line-strong hover:bg-subtle;
+  }
+}
+
+/* Respect the user's motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ded7c9; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #cbc3b2; }
