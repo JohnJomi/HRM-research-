@@ -45,6 +45,7 @@ hrm_env/bin/python -m pytest backend/tests/test_integration.py -q
 | GET | `/api/health` | backend + real HRM load state |
 | POST | `/api/puzzles` | submit ARC JSON body, returns the prediction (synchronous) |
 | POST | `/api/puzzles/upload` | same via multipart `.json` file upload |
+| POST | `/api/puzzles/stream` | same run, streaming the real pipeline events as SSE |
 | GET | `/api/jobs/{job_id}` | retrieve a completed job |
 | GET | `/api/jobs/{job_id}/result` | alias of the above |
 
@@ -99,6 +100,15 @@ Failures return **422** with the offending location, e.g.
 
 No confidence score is reported — the model does not produce one. `q_halt_logits`
 are the real Q-head outputs, nothing derived.
+
+### Streaming (added for the frontend)
+
+`POST /api/puzzles/stream` runs the identical adapter call and emits Server-Sent
+Events: `event: stage` per real `on_event` callback (including one `act_step` per
+genuine ACT iteration with that step's Q-head logits), then `event: result` with
+the same body as `POST /api/puzzles`, or `event: error`. The inference runs on a
+worker thread feeding a queue, so it still passes through the same adapter lock.
+No synthetic progress is generated.
 
 ## HRM integration point
 

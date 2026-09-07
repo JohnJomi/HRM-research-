@@ -104,3 +104,37 @@ def test_validation_errors(client, bad, expected):
 
 def test_unknown_job_returns_404(client):
     assert client.get("/api/jobs/does-not-exist").status_code == 404
+
+def test_sse_stream_emits_real_events_then_result(client, task):
+    """The streaming endpoint the frontend uses: real on_event stages as SSE,
+    then the same payload as POST /api/puzzles."""
+    with client.stream("POST", "/api/puzzles/stream",
+                       json={"task": task, "test_index": 0}) as r:
+        assert r.status_code == 200
+        assert r.headers["content-type"].startswith("text/event-stream")
+        body = "".join(r.iter_text())
+
+    frames = [f for f in body.split("\n\n") if f.strip()]
+    stages, result = [], None
+    for frame in frames:
+        name = next((l[6:].strip() for l in frame.split("\n") if l.startswith("event:")), "")
+        data = json.loads("".join(l[5:].strip() for l in frame.split("\n") if l.startswith("data:")))
+        if name == "stage":
+            stages.append(data)
+        elif name == "result":
+            result = data
+
+    names = [s["stage"] for s in stages]
+    assert names[:3] == ["validating", "preprocessing", "encoding"]
+    assert names.count("act_step") == 16
+    assert names[-2:] == ["postprocessing", "complete"]
+
+    # act_step events carry the real iteration number and Q-head logits
+    acts = [s for s in stages if s["stage"] == "act_step"]
+    assert [a["step"] for a in acts] == list(range(1, 17))
+    assert all(a["max_steps"] == 16 for a in acts)
+    assert all(isinstance(a["q_halt_logit"], float) for a in acts)
+
+    assert result is not None
+    assert result["prediction_dimensions"] == [19, 18]
+    assert result["prediction_grid"] == task["test"][0]["output"]
